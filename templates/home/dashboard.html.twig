@@ -1,0 +1,271 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Fintech Dashboard{% endblock %}
+
+{% block body %}
+<!-- Wallet Overview Hero Card -->
+<div class="card" style="margin-bottom: 32px; background: linear-gradient(135deg, rgba(30, 27, 75, 0.7), rgba(17, 24, 39, 0.9)); border: 1px solid rgba(99, 102, 241, 0.3);">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 24px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <span style="color: var(--text-muted); font-size: 14px;">Virtual Account (IBAN):</span>
+                <span class="mono" style="font-weight: 700; color: #818cf8; background: rgba(99, 102, 241, 0.15); padding: 3px 10px; border-radius: 6px; border: 1px solid rgba(99, 102, 241, 0.3);">
+                    {{ account ? account.accountNumber : 'N/A' }}
+                </span>
+                <button type="button" class="btn btn-outline btn-sm" onclick="navigator.clipboard.writeText('{{ account ? account.accountNumber : '' }}'); alert('Copied account number to clipboard!');" title="Copy to clipboard">
+                    📋 Copy
+                </button>
+            </div>
+            <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+                Logged in as <strong style="color: var(--text-main);">{{ user.email }}</strong> &bull; Currency: <strong>{{ account ? account.currency : 'USD' }}</strong>
+            </div>
+            <div style="font-size: 46px; font-weight: 800; color: #34d399; letter-spacing: -0.03em;" class="mono">
+                ${{ account ? (account.balance / 100)|number_format(2) : '0.00' }}
+            </div>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+            <button type="button" class="btn btn-primary" onclick="openModal('transfer-modal')">
+                <span>💸</span> Transfer Money
+            </button>
+            <button type="button" class="btn btn-success" onclick="openModal('deposit-modal')">
+                <span>💳</span> Top-up Balance
+            </button>
+            <button type="button" class="btn btn-outline" onclick="openModal('create-modal')">
+                <span>📦</span> Sell Product
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Ledger Transactions Table -->
+<div class="card" style="margin-bottom: 40px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            <h2 style="font-size: 20px; font-weight: 700;">Immutable Ledger History</h2>
+            <p style="color: var(--text-muted); font-size: 13px;">Real-time double-entry audit trail with pessimistic balance locking</p>
+        </div>
+        <span class="badge badge-primary">{{ transactions|length }} Recent Entries</span>
+    </div>
+
+    {% if transactions is not empty %}
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border); color: var(--text-muted);">
+                        <th style="padding: 12px 16px;">Type</th>
+                        <th style="padding: 12px 16px;">Reference / Parties</th>
+                        <th style="padding: 12px 16px; text-align: right;">Amount</th>
+                        <th style="padding: 12px 16px; text-align: right;">Balance After</th>
+                        <th style="padding: 12px 16px;">Timestamp</th>
+                        <th style="padding: 12px 16px; text-align: center;">Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tx in transactions %}
+                        {% set isIncoming = (tx.destinationAccount and tx.destinationAccount.id == account.id) %}
+                        {% set isOutgoing = (tx.sourceAccount and tx.sourceAccount.id == account.id) %}
+                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.04); transition: background 0.15s;">
+                            <td style="padding: 14px 16px;">
+                                {% if tx.type.value == 'DEPOSIT' %}
+                                    <span class="badge badge-success">DEPOSIT</span>
+                                {% elseif tx.type.value == 'TRANSFER' %}
+                                    <span class="badge badge-primary">TRANSFER</span>
+                                {% elseif tx.type.value == 'PURCHASE' %}
+                                    <span class="badge badge-warning">PURCHASE</span>
+                                {% else %}
+                                    <span class="badge badge-primary">{{ tx.type.value }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 14px 16px;">
+                                <div style="font-weight: 600; color: var(--text-main);">{{ tx.reference }}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);" class="mono">
+                                    {% if isOutgoing and tx.destinationAccount %}
+                                        To: {{ tx.destinationAccount.accountNumber }}
+                                    {% elseif isIncoming and tx.sourceAccount %}
+                                        From: {{ tx.sourceAccount.accountNumber }}
+                                    {% else %}
+                                        External Gateway
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td style="padding: 14px 16px; text-align: right; font-weight: 700;" class="mono">
+                                {% if isIncoming and not isOutgoing %}
+                                    <span style="color: #34d399;">+${{ (tx.amount / 100)|number_format(2) }}</span>
+                                {% else %}
+                                    <span style="color: #f87171;">-${{ (tx.amount / 100)|number_format(2) }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 14px 16px; text-align: right; color: var(--text-muted);" class="mono">
+                                {% if isIncoming and not isOutgoing %}
+                                    ${{ tx.destinationBalanceAfter ? (tx.destinationBalanceAfter / 100)|number_format(2) : '-' }}
+                                {% else %}
+                                    ${{ tx.sourceBalanceAfter ? (tx.sourceBalanceAfter / 100)|number_format(2) : '-' }}
+                                {% endif %}
+                            </td>
+                            <td style="padding: 14px 16px; color: var(--text-muted); font-size: 12px;">
+                                {{ tx.createdAt|date('Y-m-d H:i') }}
+                            </td>
+                            <td style="padding: 14px 16px; text-align: center;">
+                                <a href="{{ path('app_receipt', {id: tx.id}) }}" class="btn btn-outline btn-sm" target="_blank" title="Download Official PDF Proof">
+                                    📄 PDF
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p style="text-align: center; color: var(--text-muted); padding: 30px;">No transactions recorded on this account yet.</p>
+    {% endif %}
+</div>
+
+<!-- Marketplace Items Section -->
+<div style="margin-top: 40px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            <h2 style="font-size: 20px; font-weight: 700;">Explore P2P Catalog</h2>
+            <p style="color: var(--text-muted); font-size: 13px;">Buy items from other merchants with instant balance settlement</p>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" onclick="openModal('create-modal')">+ Sell New Product</button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+        {% for product in products %}
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                        <span class="badge badge-primary">{{ product.category }}</span>
+                        <span class="badge badge-success">{{ product.status.value }}</span>
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 6px;">{{ product.title }}</h3>
+                    <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 14px;">
+                        {{ product.description|length > 100 ? product.description|slice(0, 100) ~ '...' : product.description }}
+                    </p>
+                    <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+                        Seller: <strong style="color: var(--text-main);">{{ product.seller.email }}</strong>
+                    </div>
+                </div>
+                <div style="border-top: 1px solid var(--border); padding-top: 14px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="font-size: 18px; font-weight: 800; color: #34d399;" class="mono">
+                        ${{ (product.price / 100)|number_format(2) }}
+                    </div>
+                    {% if user.email == product.seller.email %}
+                        <span class="badge badge-warning">Your Listing</span>
+                    {% else %}
+                        <form action="{{ path('app_marketplace_buy', {id: product.id}) }}" method="post" onsubmit="return confirm('Confirm purchase of {{ product.title }} for ${{ (product.price / 100)|number_format(2) }}?');">
+                            <button type="submit" class="btn btn-success btn-sm">Buy Now</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal 1: Transfer Funds -->
+<div id="transfer-modal" class="modal-overlay">
+    <div class="modal-content">
+        <button type="button" class="modal-close" onclick="closeModal('transfer-modal')">&times;</button>
+        <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 6px;">Transfer Money (P2P)</h3>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">
+            Uses pessimistic lock to prevent race conditions during concurrent transfers.
+        </p>
+
+        <form action="{{ path('app_transfer') }}" method="post">
+            <div class="form-group">
+                <label class="form-label">Recipient (IBAN or Email)</label>
+                <input type="text" name="recipient" class="form-input" placeholder="ECOMM-XXXX-XXXX-XXXX or bob@example.com" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Amount (USD)</label>
+                <input type="number" step="0.01" min="0.01" max="100000" name="amount" class="form-input" placeholder="50.00" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Reference Note (Optional)</label>
+                <input type="text" name="reference" class="form-input" placeholder="Invoice payment, gift, etc.">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                Confirm & Transfer Immediately
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal 2: Top-up / Deposit -->
+<div id="deposit-modal" class="modal-overlay">
+    <div class="modal-content">
+        <button type="button" class="modal-close" onclick="closeModal('deposit-modal')">&times;</button>
+        <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 6px;">Simulated External Deposit</h3>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">
+            Simulates external payment gateway webhook (e.g. Stripe / PayPal).
+        </p>
+
+        <form action="{{ path('app_deposit') }}" method="post">
+            <div class="form-group">
+                <label class="form-label">Amount to Deposit (USD)</label>
+                <input type="number" step="0.01" min="1.00" max="50000" name="amount" class="form-input" value="250.00" required>
+            </div>
+            <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 10px;">
+                Add Virtual Funds
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal 3: Create Product -->
+<div id="create-modal" class="modal-overlay">
+    <div class="modal-content">
+        <button type="button" class="modal-close" onclick="closeModal('create-modal')">&times;</button>
+        <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 6px;">List Product for Sale</h3>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">
+            Publish an item to the P2P marketplace.
+        </p>
+
+        <form action="{{ path('app_marketplace_create') }}" method="post">
+            <div class="form-group">
+                <label class="form-label">Product Title</label>
+                <input type="text" name="title" class="form-input" placeholder="e.g. Apple iPad Pro 11-inch" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <select name="category" class="form-input">
+                    <option value="Electronics">Electronics</option>
+                    <option value="Audio">Audio</option>
+                    <option value="Computers">Computers</option>
+                    <option value="Collectibles">Collectibles</option>
+                    <option value="Furniture">Furniture</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Price (USD)</label>
+                <input type="number" step="0.01" min="0.50" max="100000" name="price" class="form-input" placeholder="99.00" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-input" rows="3" placeholder="Condition, specifications, accessories included..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
+                Publish Listing
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openModal(id) {
+    document.getElementById(id).classList.add('active');
+}
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+window.onclick = function(e) {
+    if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('active');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,76 @@
+name: CI / Quality Assurance
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  tests:
+    name: PHP 8.3 Tests & Static Analysis
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: p2p_commerce_test
+          POSTGRES_USER: app_user
+          POSTGRES_PASSWORD: app_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_pgsql, pgsql, redis, intl, zip, bcmath, pcntl
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Run PHP-CS-Fixer
+        run: vendor/bin/php-cs-fixer fix --dry-run --diff
+
+      - name: Run PHPStan (Level 8)
+        run: vendor/bin/phpstan analyse -c phpstan.neon
+
+      - name: Run Doctrine Migrations
+        env:
+          DATABASE_URL: "postgresql://app_user:app_password@localhost:5432/p2p_commerce_test?serverVersion=16&charset=utf8"
+        run: php bin/console doctrine:migrations:migrate --env=test -n
+
+      - name: Run PHPUnit Test Suite
+        env:
+          DATABASE_URL: "postgresql://app_user:app_password@localhost:5432/p2p_commerce_test?serverVersion=16&charset=utf8"
+          MESSENGER_TRANSPORT_DSN: "in-memory://"
+        run: bin/phpunit

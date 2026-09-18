@@ -1,0 +1,14 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Domain\Account\Event;
+
+use App\Entity\Transaction;
+
+final readonly class FundsDepositedEvent
+{
+    public function __construct(public Transaction $transaction)
+    {
+    }
+}

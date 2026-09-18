@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}P2P Marketplace & Ledger{% endblock %}
+
+{% block body %}
+<div style="margin-bottom: 48px; text-align: center;">
+    <div style="display: inline-block; padding: 6px 14px; background: var(--primary-light); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 20px; font-size: 13px; font-weight: 600; color: #818cf8; margin-bottom: 16px;">
+        🚀 Production-Grade Fintech Architecture
+    </div>
+    <h1 style="font-size: 42px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 16px; background: linear-gradient(135deg, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        P2P Commerce with ACID Ledger Engine
+    </h1>
+    <p style="color: var(--text-muted); font-size: 18px; max-width: 700px; margin: 0 auto 28px; line-height: 1.6;">
+        Demonstrating strict balance isolation, pessimistic locking against race conditions, CQRS buses via Symfony Messenger, idempotent API transactions, and asynchronous PDF receipts.
+    </p>
+
+    <div style="display: flex; gap: 16px; justify-content: center;">
+        {% if app.user %}
+            <a href="{{ path('app_dashboard') }}" class="btn btn-primary">Go to Wallet Dashboard &rarr;</a>
+        {% else %}
+            <a href="{{ path('app_login') }}" class="btn btn-primary">Launch Interactive Demo &rarr;</a>
+            <a href="#marketplace" class="btn btn-outline">Explore Marketplace Items</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Architecture Badges Section -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 48px;">
+    <div class="card" style="padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 8px;">🔒</div>
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">Pessimistic Locking</h3>
+        <p style="font-size: 13px; color: var(--text-muted);">Deterministic lock sorting prevents AB-BA cyclic deadlocks during multi-party concurrent transfers.</p>
+    </div>
+    <div class="card" style="padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 8px;">📜</div>
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">Ledger Pattern</h3>
+        <p style="font-size: 13px; color: var(--text-muted);">Balances are strictly updated via atomic ledger transactions with before/after state verification.</p>
+    </div>
+    <div class="card" style="padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 8px;">⚡</div>
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">CQRS & Messenger</h3>
+        <p style="font-size: 13px; color: var(--text-muted);">Command & Event buses with Redis async worker queues for notification emails and PDF generation.</p>
+    </div>
+    <div class="card" style="padding: 20px;">
+        <div style="font-size: 24px; margin-bottom: 8px;">🔑</div>
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 4px;">Idempotency Keys</h3>
+        <p style="font-size: 13px; color: var(--text-muted);">Guarantees zero double-spending when network requests are retried with identical keys.</p>
+    </div>
+</div>
+
+<!-- Marketplace Items Grid -->
+<div id="marketplace" style="margin-top: 40px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <div>
+            <h2 style="font-size: 24px; font-weight: 700;">Active P2P Listings</h2>
+            <p style="color: var(--text-muted); font-size: 14px;">Items listed by users ready for instant atomic purchase.</p>
+        </div>
+        {% if app.user %}
+            <a href="{{ path('app_dashboard') }}" class="btn btn-primary btn-sm">+ List New Item</a>
+        {% endif %}
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+        {% for product in products %}
+            <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, border-color 0.2s;">
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                        <span class="badge badge-primary">{{ product.category }}</span>
+                        <span class="badge badge-success">{{ product.status.value }}</span>
+                    </div>
+                    <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 8px; line-height: 1.4;">{{ product.title }}</h3>
+                    <p style="color: var(--text-muted); font-size: 13px; line-height: 1.5; margin-bottom: 16px;">
+                        {{ product.description|length > 110 ? product.description|slice(0, 110) ~ '...' : product.description }}
+                    </p>
+                </div>
+                <div style="border-top: 1px solid var(--border); padding-top: 14px; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Price</div>
+                        <div style="font-size: 20px; font-weight: 800; color: #34d399;" class="mono">${{ (product.price / 100)|number_format(2) }}</div>
+                    </div>
+                    {% if app.user %}
+                        {% if app.user.email == product.seller.email %}
+                            <span class="badge badge-warning">Your Listing</span>
+                        {% else %}
+                            <form action="{{ path('app_marketplace_buy', {id: product.id}) }}" method="post" onsubmit="return confirm('Confirm atomic purchase of {{ product.title }} for ${{ (product.price / 100)|number_format(2) }}?');">
+                                <button type="submit" class="btn btn-success btn-sm">Buy Now</button>
+                            </form>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ path('app_login') }}" class="btn btn-outline btn-sm">Sign in to buy</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <p style="color: var(--text-muted);">No active listings right now. Sign in and be the first to sell!</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
