@@ -64,13 +64,15 @@ jobs:
       - name: Run PHPStan (Level 8)
         run: vendor/bin/phpstan analyse -c phpstan.neon
 
-      - name: Run Doctrine Migrations
+      - name: Create Test Database & Run Migrations
         env:
-          DATABASE_URL: "postgresql://app_user:app_password@localhost:5432/p2p_commerce_test?serverVersion=16&charset=utf8"
-        run: php bin/console doctrine:migrations:migrate --env=test -n
+          DATABASE_URL: "postgresql://app_user:app_password@127.0.0.1:5432/p2p_commerce_test?serverVersion=16&charset=utf8"
+        run: |
+          php bin/console doctrine:database:create --env=test --if-not-exists
+          php bin/console doctrine:migrations:migrate --env=test -n
 
       - name: Run PHPUnit Test Suite
         env:
-          DATABASE_URL: "postgresql://app_user:app_password@localhost:5432/p2p_commerce_test?serverVersion=16&charset=utf8"
+          DATABASE_URL: "postgresql://app_user:app_password@127.0.0.1:5432/p2p_commerce_test?serverVersion=16&charset=utf8"
           MESSENGER_TRANSPORT_DSN: "in-memory://"
         run: bin/phpunit
