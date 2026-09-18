@@ -14,7 +14,7 @@
         <ini name="error_reporting" value="-1" />
         <server name="APP_ENV" value="test" force="true" />
         <server name="SHELL_VERBOSITY" value="-1" />
-        <server name="DATABASE_URL" value="postgresql://app_user:app_password@postgres:5432/p2p_commerce_test?serverVersion=16&amp;charset=utf8" force="true" />
+        <server name="DATABASE_URL" value="postgresql://app_user:app_password@postgres:5432/p2p_commerce_test?serverVersion=16&amp;charset=utf8" force="false" />
         <server name="MESSENGER_TRANSPORT_DSN" value="in-memory://" force="true" />
     </php>
 
