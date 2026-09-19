@@ -1,0 +1,18 @@
+# .devcontainer/docker-compose.override.yml
+# Applied on top of ../docker-compose.yml only inside GitHub Codespaces / devcontainer.
+# The base file is unchanged so local Docker workflows are unaffected.
+
+services:
+  php:
+    environment:
+      # Allow all origins in Codespaces (dynamic *.github.dev domains)
+      CORS_ALLOW_ORIGIN: '*'
+      # Trust the Codespaces reverse-proxy so Symfony sees the real host/scheme
+      SYMFONY_TRUSTED_PROXIES: '127.0.0.1,REMOTE_ADDR'
+      SYMFONY_TRUSTED_HEADERS: 'x-forwarded-for,x-forwarded-host,x-forwarded-proto,x-forwarded-port,x-forwarded-prefix'
+
+  worker:
+    environment:
+      CORS_ALLOW_ORIGIN: '*'
+      SYMFONY_TRUSTED_PROXIES: '127.0.0.1,REMOTE_ADDR'
+      SYMFONY_TRUSTED_HEADERS: 'x-forwarded-for,x-forwarded-host,x-forwarded-proto,x-forwarded-port,x-forwarded-prefix'

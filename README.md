@@ -7,6 +7,7 @@
 [![PHPStan Level 8](https://img.shields.io/badge/PHPStan-Level%208-brightgreen?logo=php&logoColor=white)](https://phpstan.org/)
 [![Code Style](https://img.shields.io/badge/Code%20Style-PSR--12%20%2F%20Symfony-blue)](https://cs.symfony.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/your-username/symfony-p2p-commerce?quickstart=1)
 
 A production-grade **P2P Marketplace** with internal bank accounts, virtual balance management, and immutable double-entry ledger tracking. Designed specifically to showcase enterprise Symfony architecture, strict financial transactional safety, deadlock-free concurrency control, CQRS messaging buses, and asynchronous background worker pipelines.
 
@@ -111,6 +112,49 @@ graph TD
 * Powered by **Redis 7** and consumed by a standalone `worker` container.
 * `GenerateReceiptPdfMessage`: Worker asynchronously renders high-resolution PDF proof-of-payment receipts using Dompdf into `var/receipts/`.
 * `SendPurchaseNotificationMessage`: Worker simulates notification delivery to buyer and seller upon order completion.
+
+---
+
+## 🌐 GitHub Codespaces (Zero-Install)
+
+Click the badge above or use the button below to launch a **fully pre-configured cloud development environment** with all services running automatically.
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/your-username/symfony-p2p-commerce?quickstart=1)
+
+> 💡 Replace `your-username` in the badge URLs with your actual GitHub username.
+
+### What happens automatically
+When the Codespace starts, `.devcontainer/post-create.sh` runs and:
+1. Installs all Composer dependencies
+2. Waits for PostgreSQL to be ready
+3. Runs all database migrations
+4. Loads demo fixtures (Alice, Bob, Charlie, Admin)
+5. Warms the Symfony cache
+
+### Forwarded Ports
+| Port | Service | Notes |
+|---|---|---|
+| **8080** | Web App (Nginx) | Opens automatically in browser |
+| **5432** | PostgreSQL 16 | `app_user` / `app_password` |
+| **6379** | Redis 7 | — |
+
+### Running commands in Codespaces
+Open the integrated terminal — it connects directly into the PHP container:
+```bash
+# All make targets work
+make test
+make phpstan
+make fixtures
+make migrate
+
+# Or raw Symfony console commands
+php bin/console debug:router
+php bin/console messenger:consume async -vv
+```
+
+### Rebuilding the environment
+If you change `Dockerfile` or `docker-compose.yml`, rebuild from the VS Code command palette:
+> **Dev Containers: Rebuild Container**
 
 ---
 

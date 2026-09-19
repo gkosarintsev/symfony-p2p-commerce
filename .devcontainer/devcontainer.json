@@ -1,0 +1,84 @@
+{
+  "name": "P2P Commerce (Symfony 7)",
+
+  // Re-use the project's existing docker-compose.yml plus devcontainer-specific overrides.
+  "dockerComposeFile": [
+    "../docker-compose.yml",
+    "docker-compose.override.yml"
+  ],
+
+  // The VS Code server runs inside the `php` service.
+  "service": "php",
+
+  // Must match the volume mount in docker-compose.yml.
+  "workspaceFolder": "/var/www/html",
+
+  // Connect as www-data (same user php-fpm runs as).
+  // The Dockerfile now gives www-data /bin/bash so this works.
+  "remoteUser": "www-data",
+
+  // Don't kill php-fpm; let it run as defined in the Dockerfile CMD.
+  "overrideCommand": false,
+
+  // Ports to forward to the browser / local machine.
+  "forwardPorts": [8080, 5432, 6379],
+  "portsAttributes": {
+    "8080": {
+      "label": "Web App (Nginx)",
+      "onAutoForward": "openBrowser"
+    },
+    "5432": {
+      "label": "PostgreSQL 16"
+    },
+    "6379": {
+      "label": "Redis 7"
+    }
+  },
+
+  // Runs once after the container is first created.
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // PHP
+        "bmewburn.vscode-intelephense-client",
+        "xdebug.php-debug",
+        "neilbrayfield.php-docblocker",
+        "MehediDracula.php-namespace-resolver",
+        // Symfony
+        "TheNouillet.symfony-vscode",
+        // HTTP / REST
+        "humao.rest-client",
+        // Docker
+        "ms-azuretools.vscode-docker",
+        // YAML / config
+        "redhat.vscode-yaml",
+        // EditorConfig
+        "EditorConfig.EditorConfig",
+        // Git
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "php.validate.executablePath": "/usr/local/bin/php",
+        "intelephense.environment.phpVersion": "8.3.0",
+        "intelephense.files.exclude": [
+          "**/.git/**",
+          "**/node_modules/**",
+          "**/var/cache/**",
+          "**/var/log/**",
+          "**/vendor/**"
+        ],
+        "editor.formatOnSave": true,
+        "editor.tabSize": 4,
+        "[php]": {
+          "editor.tabSize": 4
+        },
+        "files.watcherExclude": {
+          "**/var/cache/**": true,
+          "**/vendor/**": true
+        }
+      }
+    }
+  }
+}

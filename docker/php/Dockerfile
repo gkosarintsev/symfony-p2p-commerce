@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libzip-dev \
     make \
     procps \
+    bash \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
@@ -32,7 +33,8 @@ WORKDIR /var/www/html
 
 ARG UID=1000
 ARG GID=1000
-RUN usermod -u ${UID} www-data && groupmod -g ${GID} www-data || true
+# Give www-data a real shell (needed for GitHub Codespaces / devcontainer attach)
+RUN usermod -u ${UID} -s /bin/bash www-data && groupmod -g ${GID} www-data || true
 
 USER www-data
 
