@@ -7,7 +7,7 @@
 [![PHPStan Level 8](https://img.shields.io/badge/PHPStan-Level%208-brightgreen?logo=php&logoColor=white)](https://phpstan.org/)
 [![Code Style](https://img.shields.io/badge/Code%20Style-PSR--12%20%2F%20Symfony-blue)](https://cs.symfony.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/your-username/symfony-p2p-commerce?quickstart=1)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/gkosarintsev/symfony-p2p-commerce?quickstart=1)
 
 A production-grade **P2P Marketplace** with internal bank accounts, virtual balance management, and immutable double-entry ledger tracking. Designed specifically to showcase enterprise Symfony architecture, strict financial transactional safety, deadlock-free concurrency control, CQRS messaging buses, and asynchronous background worker pipelines.
 
@@ -119,9 +119,7 @@ graph TD
 
 Click the badge above or use the button below to launch a **fully pre-configured cloud development environment** with all services running automatically.
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/your-username/symfony-p2p-commerce?quickstart=1)
-
-> 💡 Replace `your-username` in the badge URLs with your actual GitHub username.
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/gkosarintsev/symfony-p2p-commerce?quickstart=1)
 
 ### What happens automatically
 When the Codespace starts, `.devcontainer/post-create.sh` runs and:
