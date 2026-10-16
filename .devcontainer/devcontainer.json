@@ -13,12 +13,12 @@
   // Must match the volume mount in docker-compose.yml.
   "workspaceFolder": "/var/www/html",
 
-  // Connect as www-data (same user php-fpm runs as).
-  // The Dockerfile now gives www-data /bin/bash so this works.
-  "remoteUser": "www-data",
+  // Run as root so VS Code Remote Server has full permissions in Codespaces
+  "containerUser": "root",
+  "remoteUser": "root",
 
-  // Don't kill php-fpm; let it run as defined in the Dockerfile CMD.
-  "overrideCommand": false,
+  // Start PHP-FPM in background as daemon
+  "postStartCommand": "php-fpm -D",
 
   // Ports to forward to the browser / local machine.
   "forwardPorts": [8080, 5432, 6379],

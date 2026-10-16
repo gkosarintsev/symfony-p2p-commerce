@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # .devcontainer/post-create.sh
 # Runs automatically after the Codespace is created.
-# All commands execute inside the `php` container as the remoteUser (www-data).
 
 set -euo pipefail
+
+export COMPOSER_ALLOW_SUPERUSER=1
 
 echo ""
 echo "╔══════════════════════════════════════════════════════╗"
@@ -52,6 +53,7 @@ echo "    ✓ done"
 # ── 6. Ensure var/ directories are writable ──────────────────────────────────
 echo "🔒  Fixing var/ permissions..."
 mkdir -p var/cache var/log var/receipts
+chown -R www-data:www-data var/ || true
 chmod -R 777 var/ || true
 echo "    ✓ done"
 
