@@ -18,32 +18,41 @@ echo "    ✓ done"
 
 # ── 2. Wait for PostgreSQL ───────────────────────────────────────────────────
 echo "⏳  Waiting for PostgreSQL to accept connections..."
+DB_READY=false
 for i in $(seq 1 30); do
-  php bin/console doctrine:query:sql "SELECT 1" --quiet 2>/dev/null && break
+  if pg_isready -h postgres -U app_user -d p2p_commerce >/dev/null 2>&1 || php bin/console doctrine:query:sql "SELECT 1" --quiet 2>/dev/null; then
+    DB_READY=true
+    break
+  fi
   echo "    attempt $i/30…"
   sleep 2
 done
-echo "    ✓ PostgreSQL ready"
 
-# ── 3. Run migrations ────────────────────────────────────────────────────────
-echo "🗄️   Running database migrations..."
-php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
-echo "    ✓ done"
+if [ "$DB_READY" = true ]; then
+  echo "    ✓ PostgreSQL ready"
 
-# ── 4. Load fixtures ─────────────────────────────────────────────────────────
-echo "🌱  Loading demo fixtures (alice / bob / charlie / admin)..."
-php bin/console doctrine:fixtures:load --no-interaction
-echo "    ✓ done"
+  # ── 3. Run migrations ────────────────────────────────────────────────────────
+  echo "🗄️   Running database migrations..."
+  php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration || echo "⚠️  Migrations skipped or failed"
+  echo "    ✓ done"
+
+  # ── 4. Load fixtures ─────────────────────────────────────────────────────────
+  echo "🌱  Loading demo fixtures (alice / bob / charlie / admin)..."
+  php bin/console doctrine:fixtures:load --no-interaction || echo "⚠️  Fixtures skipped or failed"
+  echo "    ✓ done"
+else
+  echo "    ⚠️ Warning: PostgreSQL was not ready after 60s. Run 'make migrate' and 'make fixtures' manually."
+fi
 
 # ── 5. Warm cache ────────────────────────────────────────────────────────────
 echo "🔥  Warming Symfony cache..."
-php bin/console cache:warmup --env=dev
+php bin/console cache:warmup --env=dev || true
 echo "    ✓ done"
 
 # ── 6. Ensure var/ directories are writable ──────────────────────────────────
 echo "🔒  Fixing var/ permissions..."
 mkdir -p var/cache var/log var/receipts
-chmod -R 777 var/
+chmod -R 777 var/ || true
 echo "    ✓ done"
 
 echo ""

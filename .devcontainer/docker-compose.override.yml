@@ -5,6 +5,7 @@
 services:
   php:
     environment:
+      HOME: /home/www-data
       # Allow all origins in Codespaces (dynamic *.github.dev domains)
       CORS_ALLOW_ORIGIN: '*'
       # Trust the Codespaces reverse-proxy so Symfony sees the real host/scheme
@@ -13,6 +14,7 @@ services:
 
   worker:
     environment:
+      HOME: /home/www-data
       CORS_ALLOW_ORIGIN: '*'
       SYMFONY_TRUSTED_PROXIES: '127.0.0.1,REMOTE_ADDR'
       SYMFONY_TRUSTED_HEADERS: 'x-forwarded-for,x-forwarded-host,x-forwarded-proto,x-forwarded-port,x-forwarded-prefix'

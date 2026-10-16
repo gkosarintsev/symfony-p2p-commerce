@@ -10,6 +10,7 @@ services:
     volumes:
       - ./:/var/www/html
     environment:
+      HOME: /home/www-data
       APP_ENV: dev
       APP_SECRET: 3f95e8697669d2732959828dc9e20a0b
       DATABASE_URL: "postgresql://app_user:app_password@postgres:5432/p2p_commerce?serverVersion=16&charset=utf8"
@@ -76,6 +77,7 @@ services:
     volumes:
       - ./:/var/www/html
     environment:
+      HOME: /home/www-data
       APP_ENV: dev
       APP_SECRET: 3f95e8697669d2732959828dc9e20a0b
       DATABASE_URL: "postgresql://app_user:app_password@postgres:5432/p2p_commerce?serverVersion=16&charset=utf8"

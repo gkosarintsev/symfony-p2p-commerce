@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make \
     procps \
     bash \
+    sudo \
+    postgresql-client \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
@@ -33,8 +35,17 @@ WORKDIR /var/www/html
 
 ARG UID=1000
 ARG GID=1000
-# Give www-data a real shell (needed for GitHub Codespaces / devcontainer attach)
-RUN usermod -u ${UID} -s /bin/bash www-data && groupmod -g ${GID} www-data || true
+
+# Set up www-data: valid shell, home directory, permissions, and passwordless sudo for dev
+RUN mkdir -p /home/www-data \
+    && cp -r /etc/skel/. /home/www-data/ || true \
+    && usermod -u ${UID} -s /bin/bash -d /home/www-data www-data \
+    && groupmod -g ${GID} www-data || true \
+    && chown -R www-data:www-data /home/www-data /var/www \
+    && echo "www-data ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/www-data \
+    && chmod 0440 /etc/sudoers.d/www-data
+
+ENV HOME=/home/www-data
 
 USER www-data
 
